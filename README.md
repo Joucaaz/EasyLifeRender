@@ -2,8 +2,9 @@
 
 EasyLifeRender is a Blender addon that allows users to add lights and a camera around selected objects based on various presets.
 
-[![EasyLifeRender Video Example](./src/EasyLifeRenderCapture.webp)](https://joudcazeaux.fr/joucaz/Creations/Script/EasyLifeRender/EasyLifeRenderVideo.mp4)
-[![Button Text](https://img.shields.io/badge/Click%20Here-Button-blue?style=for-the-badge)]([https://example.com](https://joudcazeaux.fr/joucaz/Creations/Script/EasyLifeRender/EasyLifeRenderVideo.mp4))
+![EasyLifeRender](./src/EasyLifeRenderCapture.webp)
+
+[EasyLifeRender Video Example]([https://example.com](https://joudcazeaux.fr/joucaz/Creations/Script/EasyLifeRender/EasyLifeRenderVideo.mp4))
 
 ## 🎨 Available Presets
 
