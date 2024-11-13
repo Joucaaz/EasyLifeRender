@@ -21,7 +21,7 @@ Un éclairage chaud et vibrant, parfait pour des scènes pleines d'énergie.
 🎶 **Samba Do Brazil Lights**  
 Des lumières dynamiques et festives, inspirées par la chaleur du Brésil.
 
-You can use it easily by downloading and installing it in your Blender.
+You can use it easily by downloading and installing the zip file in your Blender.
 ## 🔗 Links
 [![portfolio](https://img.shields.io/badge/my_portfolio-000?style=for-the-badge&logo=ko-fi&logoColor=white)](https://joudcazeaux.fr)
 [![linkedin](https://img.shields.io/badge/linkedin-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/joudcazeaux/)
