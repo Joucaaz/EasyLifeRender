@@ -10,7 +10,7 @@ bl_info = {
     "name": "EasyLifeRender",
     "description": "Easy Life Render is a Blender addon that allows users to add lights and a camera around selected objects based on various presets",
     "author": "Joucaz",
-    "version": (1, 0, 0),
+    "version": (1, 1, 0),
     "blender": (2, 80, 0), 
     "location": "View3D > EasyLifeRender",
     "category": "Lighting"
@@ -18,6 +18,7 @@ bl_info = {
 import bpy
 import math
 import mathutils
+from mathutils import Vector
 
 
 class OBJECT_OT_add_lights(bpy.types.Operator):
@@ -53,25 +54,61 @@ class OBJECT_OT_add_lights(bpy.types.Operator):
         
         return {'FINISHED'}
     
+#    def create_bounding_cube(self, objects):
+#        min_x = min(obj.location.x - obj.dimensions.x * 0.5 for obj in objects)
+#        max_x = max(obj.location.x + obj.dimensions.x * 0.5 for obj in objects)
+#        min_y = min(obj.location.y - obj.dimensions.y * 0.5 for obj in objects)
+#        max_y = max(obj.location.y + obj.dimensions.y * 0.5 for obj in objects)
+#        min_z = min(obj.location.z - obj.dimensions.z * 0.5 for obj in objects)
+#        max_z = max(obj.location.z + obj.dimensions.z * 0.5 for obj in objects)
+#        
+#        center = ((min_x + max_x) / 2, (min_y + max_y) / 2, (min_z + max_z) / 2)
+#        dimensions = (max_x - min_x, max_y - min_y, max_z - min_z)
+#        
+#        base_name = f"Scene.{self.bounding_cube_index}"
+#        self.bounding_cube_index += 1 
+#                 
+#        bpy.ops.mesh.primitive_cube_add(size=2, location=center)
+#        bounding_cube = bpy.context.object
+#        bounding_cube.name = base_name
+#        bounding_cube.dimensions = dimensions
+#        
+#        bounding_cube.display_type = 'WIRE'
+#        bounding_cube.hide_render = True
+#        
+#        return bounding_cube
+
     def create_bounding_cube(self, objects):
-        min_x = min(obj.location.x - obj.dimensions.x * 0.5 for obj in objects)
-        max_x = max(obj.location.x + obj.dimensions.x * 0.5 for obj in objects)
-        min_y = min(obj.location.y - obj.dimensions.y * 0.5 for obj in objects)
-        max_y = max(obj.location.y + obj.dimensions.y * 0.5 for obj in objects)
-        min_z = min(obj.location.z - obj.dimensions.z * 0.5 for obj in objects)
-        max_z = max(obj.location.z + obj.dimensions.z * 0.5 for obj in objects)
+        # Initialise les valeurs min/max pour les coordonnées globales
+        min_x, min_y, min_z = float('inf'), float('inf'), float('inf')
+        max_x, max_y, max_z = float('-inf'), float('-inf'), float('-inf')
         
+        # Parcourt chaque objet et ajuste les min/max selon la bounding box globale
+        for obj in objects:
+            # Récupère les coordonnées des coins de la bounding box dans le système de coordonnées global
+            for corner in obj.bound_box:
+                world_corner = obj.matrix_world @ Vector(corner)
+                min_x = min(min_x, world_corner.x)
+                max_x = max(max_x, world_corner.x)
+                min_y = min(min_y, world_corner.y)
+                max_y = max(max_y, world_corner.y)
+                min_z = min(min_z, world_corner.z)
+                max_z = max(max_z, world_corner.z)
+        
+        # Calcule le centre et les dimensions du bounding cube
         center = ((min_x + max_x) / 2, (min_y + max_y) / 2, (min_z + max_z) / 2)
         dimensions = (max_x - min_x, max_y - min_y, max_z - min_z)
         
+        # Crée le cube de bounding avec les nouvelles dimensions et positionne au centre
         base_name = f"Scene.{self.bounding_cube_index}"
         self.bounding_cube_index += 1 
-                 
+
         bpy.ops.mesh.primitive_cube_add(size=2, location=center)
         bounding_cube = bpy.context.object
         bounding_cube.name = base_name
         bounding_cube.dimensions = dimensions
         
+        # Définit le cube comme fil de fer et invisible au rendu
         bounding_cube.display_type = 'WIRE'
         bounding_cube.hide_render = True
         
@@ -144,8 +181,12 @@ class OBJECT_OT_add_lights(bpy.types.Operator):
         
         camera_pos = (obj_location.x + distance * 1.5, obj_location.y + distance * math.sin(math.radians(45)), obj_location.z + distance)
         bpy.ops.object.camera_add(enter_editmode=False, align='VIEW', location=camera_pos, rotation=(0, 0, 0))
-        camera = bpy.context.object
+        
+        # Récupération explicite de l'objet de caméra ajouté
+        camera = bpy.context.view_layer.objects.active  # Récupère l'objet actif ajouté
         camera.name = f"Camera_{obj.name}"
+        bpy.context.scene.camera = camera
+
         bpy.ops.object.select_all(action='DESELECT')
         obj.select_set(True)
         direction = obj_location - camera.location
