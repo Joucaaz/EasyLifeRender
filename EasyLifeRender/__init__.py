@@ -10,7 +10,7 @@ bl_info = {
     "name": "EasyLifeRender",
     "description": "Easy Life Render is a Blender addon that allows users to add lights and a camera around selected objects based on various presets",
     "author": "Joucaz",
-    "version": (1, 1, 0),
+    "version": (1, 2, 0),
     "blender": (2, 80, 0), 
     "location": "View3D > EasyLifeRender",
     "category": "Lighting"
@@ -26,8 +26,6 @@ class OBJECT_OT_add_lights(bpy.types.Operator):
     bl_idname = "object.add_lights"
     bl_label = "Add Lights"
     bl_options = {'REGISTER', 'UNDO'}
-    
-    bounding_cube_index = 1
 
     def execute(self, context):
         selected_objects = context.selected_objects
@@ -40,43 +38,17 @@ class OBJECT_OT_add_lights(bpy.types.Operator):
             return {'CANCELLED'}
         
         if len(selected_objects) >= 1:
-            bounding_cube = self.create_bounding_cube(selected_objects)            
+            bounding_cube = self.create_bounding_cube(selected_objects)  
             bpy.ops.object.select_all(action='DESELECT')
             bpy.data.objects[bounding_cube.name].select_set(True)
             selected_objects = context.selected_objects
             self.add_lights_around_object(selected_objects[0], light_settings)
-#        elif len(selected_objects) == 1:
-#            self.add_lights_around_object(selected_objects[0], light_settings)
         else:
             self.report({'WARNING'}, "No object selected")
             return {'CANCELLED'}
     
         
         return {'FINISHED'}
-    
-#    def create_bounding_cube(self, objects):
-#        min_x = min(obj.location.x - obj.dimensions.x * 0.5 for obj in objects)
-#        max_x = max(obj.location.x + obj.dimensions.x * 0.5 for obj in objects)
-#        min_y = min(obj.location.y - obj.dimensions.y * 0.5 for obj in objects)
-#        max_y = max(obj.location.y + obj.dimensions.y * 0.5 for obj in objects)
-#        min_z = min(obj.location.z - obj.dimensions.z * 0.5 for obj in objects)
-#        max_z = max(obj.location.z + obj.dimensions.z * 0.5 for obj in objects)
-#        
-#        center = ((min_x + max_x) / 2, (min_y + max_y) / 2, (min_z + max_z) / 2)
-#        dimensions = (max_x - min_x, max_y - min_y, max_z - min_z)
-#        
-#        base_name = f"Scene.{self.bounding_cube_index}"
-#        self.bounding_cube_index += 1 
-#                 
-#        bpy.ops.mesh.primitive_cube_add(size=2, location=center)
-#        bounding_cube = bpy.context.object
-#        bounding_cube.name = base_name
-#        bounding_cube.dimensions = dimensions
-#        
-#        bounding_cube.display_type = 'WIRE'
-#        bounding_cube.hide_render = True
-#        
-#        return bounding_cube
 
     def create_bounding_cube(self, objects):
         # Initialise les valeurs min/max pour les coordonnées globales
@@ -100,8 +72,7 @@ class OBJECT_OT_add_lights(bpy.types.Operator):
         dimensions = (max_x - min_x, max_y - min_y, max_z - min_z)
         
         # Crée le cube de bounding avec les nouvelles dimensions et positionne au centre
-        base_name = f"Scene.{self.bounding_cube_index}"
-        self.bounding_cube_index += 1 
+        base_name = f"(DO NOT REMOVE WITHOUT THE COLLECTION)Scene.001"
 
         bpy.ops.mesh.primitive_cube_add(size=2, location=center)
         bounding_cube = bpy.context.object
@@ -115,7 +86,8 @@ class OBJECT_OT_add_lights(bpy.types.Operator):
         return bounding_cube
     
     def add_lights_around_object(self, obj, light_settings):
-        collection_name = f"{obj.name}_Lights"
+        name_part = obj.name.split("COLLECTION)", 1)[1].lstrip(".")
+        collection_name = f"{name_part}_Lights"
         obj_dimensions = obj.dimensions
         obj_location = obj.location
         
@@ -139,9 +111,10 @@ class OBJECT_OT_add_lights(bpy.types.Operator):
                 bpy.data.collections.remove(coll)
         
         light_collection = bpy.data.collections.new(collection_name)
-        bpy.context.scene.collection.children.link(light_collection)            
+        bpy.context.scene.collection.children.link(light_collection)   
+                 
         
-        if obj.name.startswith("Scene"):
+        if obj.name.startswith("(DO NOT REMOVE"):
             
             light_collection.objects.link(obj)
             try:
@@ -184,7 +157,7 @@ class OBJECT_OT_add_lights(bpy.types.Operator):
         
         # Récupération explicite de l'objet de caméra ajouté
         camera = bpy.context.view_layer.objects.active  # Récupère l'objet actif ajouté
-        camera.name = f"Camera_{obj.name}"
+        camera.name = f"Camera_{name_part}"
         bpy.context.scene.camera = camera
 
         bpy.ops.object.select_all(action='DESELECT')
@@ -202,7 +175,7 @@ class OBJECT_OT_add_lights(bpy.types.Operator):
             bpy.context.scene.collection.objects.unlink(camera)
         
         positions = [key_light_pos, fill_light_pos, back_light_pos]
-        names = [f"KeyLight_{obj.name}", f"FillLight_{obj.name}", f"BackLight_{obj.name}"]
+        names = [f"KeyLight_{name_part}", f"FillLight_{name_part}", f"BackLight_{name_part}"]
         energies = [key_light_energy, fill_light_energy, back_light_energy]
         
         for i, pos in enumerate(positions):
